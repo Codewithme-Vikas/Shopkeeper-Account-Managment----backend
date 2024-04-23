@@ -1,0 +1,27 @@
+{
+    "name": "poster-website",
+    "version": "1.0.0",
+    "description": "A comerical website backend",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "nodemon app.js",
+        "start": "node app.js",
+        "build": "npm i"
+    },
+    "author": "Vikas",
+    "license": "ISC",
+    "dependencies": {
+        "bcrypt": "^5.1.1",
+        "cookie-parser": "^1.4.6",
+        "cors": "^2.8.5",
+        "crypto": "^1.0.1",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.0.0",
+        "nodemailer": "^6.9.8",
+        "nodemon": "^3.0.1",
+        "react-hot-toast": "^2.4.1"
+    }
+}
