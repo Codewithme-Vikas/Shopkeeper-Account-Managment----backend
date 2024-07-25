@@ -1,6 +1,7 @@
 const { default: mongoose } = require("mongoose");
 const Payment = require("../models/Payment");
 const Customer = require("../models/Customer");
+const Order = require("../models/Order");
 
 
 
@@ -18,10 +19,6 @@ exports.payment = async (req, res) => {
 
         if (!isCustomerExsist) {
             return res.status(400).json({ success: false, message: "Customer is not exsits" });
-        } else if (isCustomerExsist.accountType === 'Buyer' && type === 'Payment') {
-            return res.status(400).json({ success: false, message: "Can't payment to Buyer!" });
-        } else if (isCustomerExsist.accountType === 'Seller' && type === 'Received') {
-            return res.status(400).json({ success: false, message: "Can't received from Seller!" });
         }
 
         // create payment
@@ -83,6 +80,7 @@ exports.getAllPayments = async (req, res) => {
 
 
 // *******************************Credit of a user*******************************************
+//To Do - need to be update this controller due to remove accountType of customer
 exports.customerCredit = async (req, res) => {
     try {
         const { customerId } = req.params;
@@ -99,70 +97,165 @@ exports.customerCredit = async (req, res) => {
         }
 
         // Aggregate credit
-        const totalOrderAmount = await Customer.aggregate([
+    
+            const totalOrderAmount = await Customer.aggregate([
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(customerId)
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "orders", // The name of the "Order" collection
+                        localField: "orders",
+                        foreignField: "_id",
+                        as: "orderDetails"
+                    }
+                },
+                {
+                    $unwind: { //  $unwind :- used to deconstruct an array field into multiple documents.
+                        path: "$orderDetails",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$_id",
+                        totalOrderAmount: { $sum: "$orderDetails.orderPrice" },
+                        totalAdvance: { $sum: { $ifNull: ["$orderDetails.advance", 0] } },
+                    }
+                }
+            ]);
+
+            const totalPaymentAmount = await Customer.aggregate([
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(customerId)
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "payments", // The name of the "Order" collection
+                        localField: "payments",
+                        foreignField: "_id",
+                        as: "paymentsDetails"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$paymentsDetails",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$_id",
+                        totalPaymentAmount: { $sum: "$paymentsDetails.amount" },
+                    }
+                }
+            ]);
+    
+
+
+        const totalOrderHistory = await Order.aggregate([
             {
                 $match: {
-                    _id: new mongoose.Types.ObjectId(customerId)
-                }
-            },
-            {
-                $lookup: {
-                    from: "orders", // The name of the "Order" collection
-                    localField: "orders",
-                    foreignField: "_id",
-                    as: "orderDetails"
-                }
-            },
-            {
-                $unwind: {
-                    path: "$orderDetails",
-                    preserveNullAndEmptyArrays: true
+                    customerId: new mongoose.Types.ObjectId(customerId)
                 }
             },
             {
                 $group: {
-                    _id: "$_id",
-                    totalOrderAmount: { $sum: "$orderDetails.orderPrice" },
-                    totalAdvance: { $sum: { $ifNull: ["$orderDetails.advance", 0] } },
+                    _id: "$customerId",
+                    totalSell: {
+                        $sum: {
+                            $cond: {
+                                if: { $eq: ["$type", "Sell"] },
+                                then: "$orderPrice",
+                                else: 0
+                            }
+                        }
+                    },
+                    totalBuy: {
+                        $sum: {
+                            $cond: {
+                                if: { $eq: ["$type", "Buy"] },
+                                then: "$orderPrice",
+                                else: 0
+                            }
+                        }
+                    },
+                    totalBuyAdvance : {
+                        $sum : {
+                            $cond : {
+                                if : { $eq : [ "$type" , "Buy"] },
+                                then : "$advance",  // can also use { $ifNull : [ "$advance", 0] }
+                                else : 0
+                            }
+                        }
+                    },
+                    totalSellAdvance : {
+                        $sum : {
+                            $cond : {
+                                if : { $eq : [ "$type" , "Sell"] },
+                                then : "$advance",
+                                else : 0
+                            }
+                        }
+                    }
                 }
             }
-        ])
-
-        const totalPaymentAmount = await Customer.aggregate([
+        ]);
+        
+        const totalPayHistory = await Payment.aggregate([
             {
                 $match: {
-                    _id: new mongoose.Types.ObjectId(customerId)
-                }
-            },
-            {
-                $lookup: {
-                    from: "payments", // The name of the "Order" collection
-                    localField: "payments",
-                    foreignField: "_id",
-                    as: "paymentsDetails"
-                }
-            },
-            {
-                $unwind: {
-                    path: "$paymentsDetails",
-                    preserveNullAndEmptyArrays: true
+                    customerId: new mongoose.Types.ObjectId(customerId)
                 }
             },
             {
                 $group: {
-                    _id: "$_id",
-                    totalPaymentAmount: { $sum: "$paymentsDetails.amount" },
+                    _id: "$customerId",
+                    totalPayamentAmount: {
+                        $sum: {
+                            $cond: {
+                                if: { $eq: ["$type", "Payment"] },
+                                then: "$amount",
+                                else: 0
+                            }
+                        }
+                    },
+                    totalReceivedAmount: {
+                        $sum: {
+                            $cond: {
+                                if: { $eq: ["$type", "Received"] },
+                                then: "$amount",
+                                else: 0
+                            }
+                        }
+                    }
                 }
             }
-        ])
+        ]);
 
+
+        const data = {
+            totalSell : totalOrderHistory[0]?.totalSell  || 0,
+            totalBuyAdvance : totalOrderHistory[0]?.totalBuyAdvance  || 0,
+            totalSellAdvance : totalOrderHistory[0]?.totalSellAdvance || 0,
+            totalBuy : totalOrderHistory[0]?.totalBuy || 0,
+            totalPayament : totalPayHistory[0]?.totalPayamentAmount || 0,
+            totalReceived : totalPayHistory[0]?.totalReceivedAmount || 0,
+        }
+
+        // const balance2  =  totalSell - totalBuy + totalBuyAdvance - totalSellAdvance + totalReceived - totalPayment``
+        const balance = data.totalSell - data.totalBuy + data.totalBuyAdvance - data.totalSellAdvance + data.totalReceived - data.totalPayament
 
         return res.status(200).json({
             success: true,
             message: "successfully fetched customer credit",
             totalOrderAmount,
             totalPaymentAmount,
-            balance : totalOrderAmount[0].totalOrderAmount - totalOrderAmount[0].totalAdvance - totalPaymentAmount[0].totalPaymentAmount
+            balance,
         });
 
 

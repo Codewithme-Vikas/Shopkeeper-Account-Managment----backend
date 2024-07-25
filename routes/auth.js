@@ -8,7 +8,7 @@ const { resetPassword, resetPasswordOTP, verifyOTP } = require("../controllers/R
 
 // **********************************Auth APIS************************************************
 
-// router.post("/signup" , signup );
+// router.post("/signup" , signup ); 
 
 router.post("/login" , login );
 

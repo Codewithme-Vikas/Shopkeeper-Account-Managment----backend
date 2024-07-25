@@ -18,7 +18,6 @@ const orderSchema = new mongoose.Schema({
         address: { type: String, trim: true },
         GSTNumber: { type: String },
         PAN: { type: String },
-        accountType: { type: String, enum: ["Buyer", "Seller"], required: true },
     },
 
     products: [

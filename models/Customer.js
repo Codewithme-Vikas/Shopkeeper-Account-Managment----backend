@@ -14,7 +14,7 @@ const customerSchema = new mongoose.Schema({
 
     // accounting : { type : Number , required : true }, // accounting = total (orderPrice - payments)
 
-    accountType: { type: String, enum: ["Buyer", "Seller"], required: true },
+    // accountType: { type: String, enum: ["Buyer", "Seller"], required: true },
 
 
     orders: [{ type: mongoose.Schema.Types.ObjectId, ref: "Order" }],

@@ -6,9 +6,9 @@ const Customer = require("../models/Customer");
 // address = { state : "" , district : "", city : "" }
 exports.createCustomer = async (req, res) => {
     try {
-        const { name , email , phone , address , GSTNumber , PAN , accountType } = req.body;
+        const { name , email , phone , address , GSTNumber , PAN } = req.body;
 
-        if( !name || !accountType || !phone ){
+        if( !name || !phone ){
             return res.status(400).json({ success : false , message : "Please provide all required information!" });
         }
 
@@ -27,7 +27,6 @@ exports.createCustomer = async (req, res) => {
             address,
             GSTNumber,
             PAN,
-            accountType
         });
 
         return res.status(200).json({
@@ -172,6 +171,17 @@ exports.getAllCustomers = async (req, res) => {
     try {
         
         const allCustomersDoc = await Customer.find();
+
+
+        // const orderOfCustomers = await Order.aggregate([
+        //     {
+        //         $group : {
+        //             _id : "$customerId",
+        //             totalOrder : { $sum : "$orderPrice"},
+        //             totalAdvance : { $sum : "$advance"}
+        //         }
+        //     }
+        // ]);
 
         return res.status(200).json({
             success: true,
