@@ -6,19 +6,19 @@ const Customer = require("../models/Customer");
 // address = { state : "" , district : "", city : "" }
 exports.createCustomer = async (req, res) => {
     try {
-        const { name , email , phone , address , GSTNumber , PAN } = req.body;
+        const { name, email, phone, address, GSTNumber, PAN } = req.body;
 
-        if( !name || !phone ){
-            return res.status(400).json({ success : false , message : "Please provide all required information!" });
+        if (!name || !phone) {
+            return res.status(400).json({ success: false, message: "Please provide all required information!" });
         }
 
         //Is already exits
-        const isCustomerExists = await Customer.findOne({ name : name  } );
+        const isCustomerExists = await Customer.findOne({ name: name });
 
-        if( isCustomerExists ){
-            return res.status(400).json({ success : false , message : "Customer is already exits!" });
+        if (isCustomerExists) {
+            return res.status(400).json({ success: false, message: "Customer is already exits!" });
         }
-        
+
         // Create new entry into the db
         const customerDoc = await Customer.create({
             name,
@@ -30,8 +30,8 @@ exports.createCustomer = async (req, res) => {
         });
 
         return res.status(200).json({
-            success : true,
-            message : "Successfully created Customer.",
+            success: true,
+            message: "Successfully created Customer.",
             customerDoc
         });
 
@@ -50,31 +50,31 @@ exports.createCustomer = async (req, res) => {
 // ***************************Update Customers************************************
 exports.updateCustomer = async (req, res) => {
     try {
-        
-        const { customerId , name , email , phone , address  , GSTNumber , PAN  } = req.body;
 
-        if( !customerId ){
-            return res.status(400).json({ success : false , message : "provide customer id"});
+        const { customerId, name, email, phone, address, GSTNumber, PAN } = req.body;
+
+        if (!customerId) {
+            return res.status(400).json({ success: false, message: "provide customer id" });
         }
 
         // is customer exits
-        const isCustomerExists  = await Customer.findById( customerId );
+        const isCustomerExists = await Customer.findById(customerId);
 
-        if( !isCustomerExists ){
-            return res.status(400).json({success : false, message : "customer is not exists!"});
+        if (!isCustomerExists) {
+            return res.status(400).json({ success: false, message: "customer is not exists!" });
         }
 
         // update the customer document
-        const customerDoc = await Customer.findByIdAndUpdate( customerId , {
-            $set : {
-                name , 
+        const customerDoc = await Customer.findByIdAndUpdate(customerId, {
+            $set: {
+                name,
                 email,
                 phone,
                 address,
                 GSTNumber,
                 PAN
             }
-        },{ new : true });
+        }, { new: true });
 
         return res.status(200).json({
             success: true,
@@ -97,17 +97,17 @@ exports.updateCustomer = async (req, res) => {
 // ***************************Delete Customers************************************
 exports.deleteCustomer = async (req, res) => {
     try {
-        
-        const { customerId  } = req.params;
 
-        if( !customerId ){
-            return res.status(400).json({ success : false , message : "provide customer id"});
+        const { customerId } = req.params;
+
+        if (!customerId) {
+            return res.status(400).json({ success: false, message: "provide customer id" });
         }
 
-        const customerDoc  = await Customer.findByIdAndDelete( customerId );
+        const customerDoc = await Customer.findByIdAndDelete(customerId);
 
-        if( !customerDoc ){
-            return res.status(400).json({success : false , message : 'Customer not found'})
+        if (!customerDoc) {
+            return res.status(400).json({ success: false, message: 'Customer not found' })
         }
 
         return res.status(200).json({
@@ -132,20 +132,32 @@ exports.deleteCustomer = async (req, res) => {
 // ***************************Get Customers************************************
 exports.getCustomer = async (req, res) => {
     try {
-        
+
         const { customerId } = req.params;
 
-        if( !customerId ){
-            return res.status(400).json({ success : false , message : "provide customer id"});
+        if (!customerId) {
+            return res.status(400).json({ success: false, message: "provide customer id" });
         }
 
-        const customerDoc  = await Customer.findById( customerId )
-                                .populate({path : "orders" , select : "orderPrice advance products.productName invoiceNo  createdAt"})
-                                .populate({path : "payments" , select : "amount  createdAt note"})
-                                .exec();
+        const customerDoc = await Customer.findById(customerId)
+            .populate(
+                {
+                    path: "orders",
+                    select: "type orderPrice advance products.productName invoiceNo  createdAt",
+                    options: { sort: { createdAt: -1 } },
+                }
+            )
+            .populate(
+                {
+                    path: "payments",
+                    select: "type amount  createdAt note",
+                    options: { sort: { createdAt: -1 } },
+                }
+            )
+            .exec();
 
-        if( !customerDoc ){
-            return res.status(400).json({success : false, message : "customer is not exists!"});
+        if (!customerDoc) {
+            return res.status(400).json({ success: false, message: "customer is not exists!" });
         }
 
         return res.status(200).json({
@@ -169,7 +181,7 @@ exports.getCustomer = async (req, res) => {
 // ***************************Get all Customers************************************
 exports.getAllCustomers = async (req, res) => {
     try {
-        
+
         const allCustomersDoc = await Customer.find();
 
 

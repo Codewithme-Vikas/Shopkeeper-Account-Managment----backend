@@ -247,8 +247,8 @@ exports.customerCredit = async (req, res) => {
             totalReceived : totalPayHistory[0]?.totalReceivedAmount || 0,
         }
 
-        // const balance2  =  totalSell - totalBuy + totalBuyAdvance - totalSellAdvance + totalReceived - totalPayment``
-        const balance = data.totalSell - data.totalBuy + data.totalBuyAdvance - data.totalSellAdvance + data.totalReceived - data.totalPayament
+        // const balance2  =  totalSell - totalBuy + totalBuyAdvance - totalSellAdvance - totalReceived + totalPayment``
+        const balance = data.totalSell - data.totalSellAdvance - data.totalBuy + data.totalBuyAdvance  - data.totalReceived + data.totalPayament
 
         return res.status(200).json({
             success: true,
