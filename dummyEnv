@@ -1,0 +1,15 @@
+PORT = 3000
+
+FRONTEND_URL = "http://localhost:5173"
+
+MONGO_DB_URL = "mongodb://127.0.0.1:27017/posterDB"
+
+MONGO_USER = 
+MONGO_PASSWORD = 
+
+JWT_SECRECT_KEY = 
+
+# to send the mail
+MAIL_HOST = smtp.gmail.com
+MAIL_ID = 
+MAIL_PASS_KEY = 
