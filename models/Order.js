@@ -4,7 +4,7 @@ const orderSchema = new mongoose.Schema({
 
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true },    
 
-    invoiceNo: { type: String, required: true },
+    invoiceNo: { type: String, required: true , unique : true},
 
     
     type: { type: String, enum: ["Buy", "Sell"], required: true },
