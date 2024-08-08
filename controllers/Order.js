@@ -313,6 +313,7 @@ exports.getAllSellOrders = async (req, res) => {
 
 
 // ****************************Get All Orders of Specific Customer******************************
+// Something wrong in this controller - it is not used on frontend side
 exports.getCutomerAllOrders = async (req, res) => {
     try {
         const { customerId } = req.body;

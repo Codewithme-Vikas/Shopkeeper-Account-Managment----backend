@@ -80,7 +80,6 @@ exports.getAllPayments = async (req, res) => {
 
 
 // *******************************Credit of a user*******************************************
-//To Do - need to be update this controller due to remove accountType of customer
 exports.customerCredit = async (req, res) => {
     try {
         const { customerId } = req.params;
@@ -97,66 +96,6 @@ exports.customerCredit = async (req, res) => {
         }
 
         // Aggregate credit
-    
-            const totalOrderAmount = await Customer.aggregate([
-                {
-                    $match: {
-                        _id: new mongoose.Types.ObjectId(customerId)
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "orders", // The name of the "Order" collection
-                        localField: "orders",
-                        foreignField: "_id",
-                        as: "orderDetails"
-                    }
-                },
-                {
-                    $unwind: { //  $unwind :- used to deconstruct an array field into multiple documents.
-                        path: "$orderDetails",
-                        preserveNullAndEmptyArrays: true
-                    }
-                },
-                {
-                    $group: {
-                        _id: "$_id",
-                        totalOrderAmount: { $sum: "$orderDetails.orderPrice" },
-                        totalAdvance: { $sum: { $ifNull: ["$orderDetails.advance", 0] } },
-                    }
-                }
-            ]);
-
-            const totalPaymentAmount = await Customer.aggregate([
-                {
-                    $match: {
-                        _id: new mongoose.Types.ObjectId(customerId)
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "payments", // The name of the "Order" collection
-                        localField: "payments",
-                        foreignField: "_id",
-                        as: "paymentsDetails"
-                    }
-                },
-                {
-                    $unwind: {
-                        path: "$paymentsDetails",
-                        preserveNullAndEmptyArrays: true
-                    }
-                },
-                {
-                    $group: {
-                        _id: "$_id",
-                        totalPaymentAmount: { $sum: "$paymentsDetails.amount" },
-                    }
-                }
-            ]);
-    
-
-
         const totalOrderHistory = await Order.aggregate([
             {
                 $match: {
@@ -253,8 +192,6 @@ exports.customerCredit = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "successfully fetched customer credit",
-            totalOrderAmount,
-            totalPaymentAmount,
             balance,
         });
 
